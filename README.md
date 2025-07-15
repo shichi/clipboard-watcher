@@ -8,23 +8,25 @@ A Python utility that monitors clipboard changes and automatically saves the con
 - **Automatic HTML export**: Saves clipboard content to styled HTML files
 - **Sequential file naming**: Creates files as `01.html`, `02.html`, `03.html`, etc.
 - **Clipboard clearing**: Clears clipboard on startup to avoid capturing pre-existing content
-- **Cross-platform support**: Works on Linux/WSL environments
+- **Cross-platform support**: Works on Windows, macOS, and Linux/WSL environments
 - **Styled HTML output**: Generated HTML files include timestamps and clean formatting
 
 ## Requirements
 
 - Python 3.x
-- `xclip` or `xsel` (for clipboard access on Linux/WSL)
+- **Windows**: No additional dependencies required.
+- **macOS**: No additional dependencies required.
+- **Linux/WSL**: `xclip` or `xsel` (for clipboard access)
 
 ## Installation
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/your-username/clipboard-watcher.git
+git clone https://github.com/shichi/clipboard-watcher.git
 cd clipboard-watcher
 ```
 
-2. Install required system dependencies:
+2. (Linux/WSL only) Install required system dependencies:
 ```bash
 # Ubuntu/Debian
 sudo apt-get install xclip
@@ -90,9 +92,7 @@ The monitoring interval and file naming can be customized by modifying the sourc
 
 ## Troubleshooting
 
-**"No module named 'tkinter'"**: This program uses `xclip`/`xsel` instead of tkinter for better Linux/WSL compatibility.
-
-**Clipboard not detected**: Ensure `xclip` or `xsel` is installed:
+**Clipboard not detected on Linux/WSL**: Ensure `xclip` or `xsel` is installed:
 ```bash
 which xclip
 # or

@@ -29,15 +29,18 @@ class ClipboardWatcher:
     
     def clear_clipboard(self):
         """Clear the clipboard content"""
+        system = platform.system()
         try:
-            if platform.system() == "Darwin":  # macOS
+            if system == "Darwin":  # macOS
                 subprocess.run(['pbcopy'], input='', text=True, timeout=1)
+            elif system == "Windows": # Windows
+                subprocess.run(['clip'], input=b'', timeout=1)
             else:  # Linux/WSL
                 subprocess.run(['xclip', '-selection', 'clipboard'], 
                               input='', text=True, timeout=1)
         except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
             try:
-                if platform.system() != "Darwin":
+                if system == "Linux":
                     # Fallback to xsel for Linux
                     subprocess.run(['xsel', '--clipboard', '--clear'], 
                                   timeout=1)
@@ -46,12 +49,20 @@ class ClipboardWatcher:
 
     def get_clipboard_content(self):
         """Get current clipboard content"""
+        system = platform.system()
         try:
-            if platform.system() == "Darwin":  # macOS
+            if system == "Darwin":  # macOS
                 result = subprocess.run(['pbpaste'], 
                                       capture_output=True, text=True, timeout=1)
                 if result.returncode == 0:
                     return result.stdout
+            elif system == "Windows": # Windows
+                result = subprocess.run(
+                    ['powershell', '-command', 'Get-Clipboard'],
+                    capture_output=True, text=True, timeout=1, shell=False
+                )
+                if result.returncode == 0:
+                    return result.stdout.strip()
             else:  # Linux/WSL
                 result = subprocess.run(['xclip', '-o', '-selection', 'clipboard'], 
                                       capture_output=True, text=True, timeout=1)
@@ -70,8 +81,11 @@ class ClipboardWatcher:
     def watch_clipboard(self):
         """Main loop to watch clipboard changes"""
         print("Clipboard watcher started. Press Ctrl+C to stop.")
-        if platform.system() == "Darwin":
+        system = platform.system()
+        if system == "Darwin":
             print("Note: This uses pbpaste/pbcopy for macOS clipboard access.")
+        elif system == "Windows":
+            print("Note: This uses PowerShell and clip for Windows clipboard access.")
         else:
             print("Note: This requires xclip or xsel to be installed.")
             print("Install with: sudo apt-get install xclip")

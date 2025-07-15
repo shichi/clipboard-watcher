@@ -8,23 +8,25 @@
 - **自動HTML出力**: クリップボードの内容をスタイル付きHTMLファイルに保存
 - **連番ファイル命名**: `01.html`、`02.html`、`03.html`等として順次作成
 - **クリップボードクリア**: 起動時にクリップボードをクリアし、既存内容の取得を回避
-- **クロスプラットフォーム対応**: Linux/WSL環境で動作
+- **クロスプラットフォーム対応**: Windows, macOS, Linux/WSL環境で動作
 - **スタイル付きHTML出力**: 生成されるHTMLファイルにタイムスタンプと整ったフォーマットを含む
 
 ## 必要要件
 
 - Python 3.x
-- `xclip` または `xsel` (Linux/WSLでのクリップボードアクセス用)
+- **Windows**: 追加の依存関係はありません。
+- **macOS**: 追加の依存関係はありません。
+- **Linux/WSL**: `xclip` または `xsel` (クリップボードアクセス用)
 
 ## インストール
 
 1. このリポジトリをクローン:
 ```bash
-git clone https://github.com/your-username/clipboard-watcher.git
+git clone https://github.com/shichi/clipboard-watcher.git
 cd clipboard-watcher
 ```
 
-2. 必要なシステム依存関係をインストール:
+2. (Linux/WSLのみ) 必要なシステム依存関係をインストール:
 ```bash
 # Ubuntu/Debian
 sudo apt-get install xclip
@@ -90,9 +92,7 @@ python3 clipboard_watcher.py
 
 ## トラブルシューティング
 
-**"No module named 'tkinter'"**: このプログラムは、より良いLinux/WSL互換性のためにtkinterの代わりに`xclip`/`xsel`を使用します。
-
-**クリップボードが検出されない**: `xclip`または`xsel`がインストールされていることを確認:
+**Linux/WSLでクリップボードが検出されない**: `xclip`または`xsel`がインストールされていることを確認:
 ```bash
 which xclip
 # または
