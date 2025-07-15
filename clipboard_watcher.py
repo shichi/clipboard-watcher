@@ -2,6 +2,7 @@ import time
 import os
 import subprocess
 import html
+import platform
 
 
 class ClipboardWatcher:
@@ -19,46 +20,9 @@ class ClipboardWatcher:
         """Save clipboard content to HTML file"""
         filename = self.get_next_filename()
         
-        # Escape HTML special characters
-        escaped_content = html.escape(content)
-        
-        # Create HTML content
-        html_content = f"""<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clipboard Content - {filename}</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            line-height: 1.6;
-        }}
-        .content {{
-            background-color: #f5f5f5;
-            padding: 15px;
-            border-radius: 5px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }}
-        .timestamp {{
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }}
-    </style>
-</head>
-<body>
-    <h1>Clipboard Content</h1>
-    <div class="timestamp">Created: {time.strftime('%Y-%m-%d %H:%M:%S')}</div>
-    <div class="content">{escaped_content}</div>
-</body>
-</html>"""
-        
         try:
             with open(filename, 'w', encoding='utf-8') as f:
-                f.write(html_content)
+                f.write(content)
             print(f"Clipboard content saved to {filename}")
         except Exception as e:
             print(f"Error saving file {filename}: {e}")
@@ -66,31 +30,39 @@ class ClipboardWatcher:
     def clear_clipboard(self):
         """Clear the clipboard content"""
         try:
-            # Clear clipboard using xclip
-            subprocess.run(['xclip', '-selection', 'clipboard'], 
-                          input='', text=True, timeout=1)
+            if platform.system() == "Darwin":  # macOS
+                subprocess.run(['pbcopy'], input='', text=True, timeout=1)
+            else:  # Linux/WSL
+                subprocess.run(['xclip', '-selection', 'clipboard'], 
+                              input='', text=True, timeout=1)
         except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
             try:
-                # Fallback to xsel
-                subprocess.run(['xsel', '--clipboard', '--clear'], 
-                              timeout=1)
+                if platform.system() != "Darwin":
+                    # Fallback to xsel for Linux
+                    subprocess.run(['xsel', '--clipboard', '--clear'], 
+                                  timeout=1)
             except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
                 pass
 
     def get_clipboard_content(self):
-        """Get current clipboard content using xclip for Linux/WSL"""
+        """Get current clipboard content"""
         try:
-            # For WSL/Linux, use xclip or xsel
-            result = subprocess.run(['xclip', '-o', '-selection', 'clipboard'], 
-                                  capture_output=True, text=True, timeout=1)
-            if result.returncode == 0:
-                return result.stdout
-            else:
-                # Fallback to xsel if xclip fails
-                result = subprocess.run(['xsel', '--clipboard', '--output'], 
+            if platform.system() == "Darwin":  # macOS
+                result = subprocess.run(['pbpaste'], 
                                       capture_output=True, text=True, timeout=1)
                 if result.returncode == 0:
                     return result.stdout
+            else:  # Linux/WSL
+                result = subprocess.run(['xclip', '-o', '-selection', 'clipboard'], 
+                                      capture_output=True, text=True, timeout=1)
+                if result.returncode == 0:
+                    return result.stdout
+                else:
+                    # Fallback to xsel if xclip fails
+                    result = subprocess.run(['xsel', '--clipboard', '--output'], 
+                                          capture_output=True, text=True, timeout=1)
+                    if result.returncode == 0:
+                        return result.stdout
         except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
             pass
         return ""
@@ -98,8 +70,11 @@ class ClipboardWatcher:
     def watch_clipboard(self):
         """Main loop to watch clipboard changes"""
         print("Clipboard watcher started. Press Ctrl+C to stop.")
-        print("Note: This requires xclip or xsel to be installed.")
-        print("Install with: sudo apt-get install xclip")
+        if platform.system() == "Darwin":
+            print("Note: This uses pbpaste/pbcopy for macOS clipboard access.")
+        else:
+            print("Note: This requires xclip or xsel to be installed.")
+            print("Install with: sudo apt-get install xclip")
         
         # Clear clipboard on startup
         print("Clearing clipboard...")
@@ -113,7 +88,7 @@ class ClipboardWatcher:
                 
                 # Check if clipboard content has changed and is not empty
                 if current_clipboard and current_clipboard != self.last_clipboard:
-                    print(f"Clipboard changed: {current_clipboard[:50]}...")
+                    print(current_clipboard)
                     self.save_to_html(current_clipboard)
                     self.last_clipboard = current_clipboard
                 
